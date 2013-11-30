@@ -68,11 +68,11 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="YamlDotNet.Core">
-      <HintPath>..\packages\YamlDotNet.Core.2.2.0\lib\net35\YamlDotNet.Core.dll</HintPath>
+      <HintPath>..\..\packages\YamlDotNet.Core.2.2.0\lib\net35\YamlDotNet.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="YamlDotNet.RepresentationModel">
-      <HintPath>..\packages\YamlDotNet.RepresentationModel.2.2.0\lib\net35\YamlDotNet.RepresentationModel.dll</HintPath>
+      <HintPath>..\..\packages\YamlDotNet.RepresentationModel.2.2.0\lib\net35\YamlDotNet.RepresentationModel.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
