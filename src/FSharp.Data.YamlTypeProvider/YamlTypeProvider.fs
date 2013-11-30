@@ -161,7 +161,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces()
 
     let thisAssembly = Assembly.GetExecutingAssembly()
-    let rootNamespace = "FSharp.Data.YamlTypeProvider"
+    let nameSpace = this.GetType().Namespace
     let baseTy = typeof<Root>
     
     let watchForChanges (fileName: string) = 
@@ -175,7 +175,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
 //            w.WriteLine(sprintf "%s %A" e.Name e.ChangeType))
         watcher.EnableRaisingEvents <- true
 
-    let newT = ProvidedTypeDefinition(thisAssembly, rootNamespace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
+    let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
     let staticParams = 
         [ ProvidedStaticParameter ("FilePath", typeof<string>, "") 
           ProvidedStaticParameter ("ReadOnly", typeof<bool>, false)
@@ -191,7 +191,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
         parameters = staticParams,
         instantiationFunction = fun typeName paramValues ->
             let createTy yaml readOnly filePath =
-                let ty = ProvidedTypeDefinition (thisAssembly, rootNamespace, typeName, Some baseTy, IsErased=false, 
+                let ty = ProvidedTypeDefinition (thisAssembly, nameSpace, typeName, Some baseTy, IsErased=false, 
                                                  SuppressRelocation=false, HideObjectMethods=true)
                 let { TypesFactory.Types = childTypes; TypesFactory.Init = init} = TypesFactory.transform readOnly None (Yaml.parse yaml)
                 let rootCtr = typeof<Root>.GetConstructor [|typeof<string>|]
@@ -218,7 +218,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
                       createTy (File.ReadAllText filePath) readOnly (Some filePath)
             | _ -> failwith "Wrong parameters")
     
-    do this.AddNamespace(rootNamespace, [newT])
+    do this.AddNamespace(nameSpace, [newT])
 
 [<TypeProviderAssembly>]
 do ()
