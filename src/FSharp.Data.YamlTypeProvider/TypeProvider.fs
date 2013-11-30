@@ -11,7 +11,7 @@ open System.IO
 open System.Collections.Generic
 
 module TypesFactory =
-    open Yaml
+    open YamlParser
 
     type Scalar with
         member x.ToExpr() = 
@@ -28,14 +28,14 @@ module TypesFactory =
           Types: MemberInfo list
           Init: Expr -> Expr }
 
-    let rec transform readOnly name (node: Yaml.Node) =
+    let rec transform readOnly name (node: Node) =
         match name, node with
-        | Some name, Yaml.Scalar (_ as x) -> transformScalar readOnly name x
-        | _, Yaml.Map m -> transformMap readOnly name m
-        | Some name, Yaml.List l -> transformList readOnly name l
+        | Some name, Scalar (_ as x) -> transformScalar readOnly name x
+        | _, Map m -> transformMap readOnly name m
+        | Some name, List l -> transformList readOnly name l
         | None, _ -> failwithf "Only Maps are allowed at the root level."
     
-    and transformScalar readOnly name (node: Yaml.Scalar) =
+    and transformScalar readOnly name (node: Scalar) =
         let rawType = node.UnderlyingType
         let field = ProvidedField("_" +  name, rawType)
         let prop = ProvidedProperty (name, rawType, IsStatic=false, GetterCode = (fun [me] -> Expr.FieldGet(me, field)))
@@ -46,17 +46,17 @@ module TypesFactory =
           Types = [field :> MemberInfo; prop :> MemberInfo]
           Init = fun me -> Expr.FieldSet(me, field, initValue) }
 
-    and transformList readOnly name (children: Yaml.Node list) =
+    and transformList readOnly name (children: Node list) =
         let elements = 
             children 
             |> List.map (function
-               | Yaml.Scalar x -> { MainType = Some x.UnderlyingType; Types = []; Init = fun _ -> x.ToExpr() }
-               | Yaml.Map m -> transformMap readOnly None m)
+               | Scalar x -> { MainType = Some x.UnderlyingType; Types = []; Init = fun _ -> x.ToExpr() }
+               | Map m -> transformMap readOnly None m)
 
         let elementType = 
             match elements |> Seq.groupBy (fun n -> n.MainType) |> Seq.map fst |> Seq.toList with
             | [Some ty] -> ty
-            | types -> failwithf "List cannot contain elements of heterohenius types (attemp to mix types: %A)." 
+            | types -> failwithf "List cannot contain elements of heterohenius types (attempt to mix types: %A)." 
                                  (types |> List.map (Option.map (fun x -> x.Name)))
 
         let fieldType = typedefof<ResizeArray<_>>.MakeGenericType elementType
@@ -74,7 +74,7 @@ module TypesFactory =
           Types = childTypes @ [field :> MemberInfo; prop :> MemberInfo]
           Init = fun me -> Expr.FieldSet(me, field, initValue me) }
 
-    and foldChildren readOnly (children: (string * Yaml.Node) list) =
+    and foldChildren readOnly (children: (string * Node) list) =
         let childTypes, childInits =
             children
             |> List.map (fun (name, node) -> transform readOnly (Some name) node)
@@ -86,7 +86,7 @@ module TypesFactory =
             |> List.reduce (fun res expr -> Expr.Sequential(res, expr))
         childTypes, affinedChildInits
 
-    and transformMap readOnly name (children: (string * Yaml.Node) list) =
+    and transformMap readOnly name (children: (string * Node) list) =
         let childTypes, childInits = foldChildren readOnly children
         match name with
         | Some name ->
@@ -142,8 +142,8 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             let createTy yaml readOnly filePath =
                 let ty = ProvidedTypeDefinition (thisAssembly, nameSpace, typeName, Some baseTy, IsErased=false, 
                                                  SuppressRelocation=false, HideObjectMethods=true)
-                let { TypesFactory.Types = childTypes; TypesFactory.Init = init} = TypesFactory.transform readOnly None (Yaml.parse yaml)
-                let ctr = ProvidedConstructor ([], InvokeCode = fun [me] -> init me)
+                let types = TypesFactory.transform readOnly None (YamlParser.parse yaml)
+                let ctr = ProvidedConstructor ([], InvokeCode = fun [me] -> types.Init me)
                 match filePath with
                 | Some filePath ->
                     let saveMethod = 
@@ -152,7 +152,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
                     saveMethod.AddXmlDocDelayed (fun _ -> sprintf "Saves content into %s." filePath)
                     ty.AddMember saveMethod
                 | None -> ()
-                ty.AddMembers (ctr :> MemberInfo :: childTypes)
+                ty.AddMembers (ctr :> MemberInfo :: types.Types)
                 let assemblyPath = Path.ChangeExtension(System.IO.Path.GetTempFileName(), ".dll")
                 let assembly = ProvidedAssembly assemblyPath 
                 assembly.AddTypes [ty]

@@ -54,7 +54,8 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="Yaml.fs" />
+    <Compile Include="YamlParser.fs" />
+    <Compile Include="Root.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
