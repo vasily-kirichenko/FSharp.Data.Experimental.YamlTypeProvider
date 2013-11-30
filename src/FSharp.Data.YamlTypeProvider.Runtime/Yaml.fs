@@ -50,13 +50,23 @@ module Yaml =
         let doc = stream.Documents.[0]
         loop doc.RootNode
 
-type Root(filePath: string) = 
+type Root () = 
+    /// Saves content into a stream.
     member x.Save (stream: Stream) =
-        let serializer = YamlDotNet.RepresentationModel.Serialization.Serializer()
         use writer = new StreamWriter(stream)
+        x.Save writer
+    /// Saves content into a TestWriter.
+    member x.Save (writer: TextWriter) =
+        let serializer = YamlDotNet.RepresentationModel.Serialization.Serializer()
         serializer.Serialize(writer, x)
-    member x.Save() =
+    /// Saves content into a file.
+    member x.Save (filePath: string) =
         use file = new FileStream(filePath, FileMode.Create)
         x.Save file
+    /// Returns content as Yaml text.
+    override x.ToString() = 
+        use writer = new StringWriter()
+        x.Save writer
+        writer.ToString()
 
 

@@ -24,7 +24,7 @@
     <DocumentationFile>bin\Debug\FSharp.Data.YamlTypeProvider.XML</DocumentationFile>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe</StartProgram>
-    <StartArguments>D:\git\FSharp.Data.Experimental.YamlTypeProvider\FSharp.Data.Experimental.YamlTypeProvider.sln</StartArguments>
+    <StartArguments>L:\git\FSharp.Data.Experimental.YamlTypeProvider\\FSharp.Data.Experimental.YamlTypeProvider.sln</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,7 +54,7 @@
   <ItemGroup>
     <Compile Include="ProvidedTypes-head.fsi" />
     <Compile Include="ProvidedTypes-head.fs" />
-    <Compile Include="YamlTypeProvider.fs" />
+    <Compile Include="TypeProvider.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <None Include="TestScript.fsx" />
     <None Include="packages.config" />

@@ -1,5 +1,7 @@
 ﻿namespace FSharp.Data.Experimental
 
+#nowarn "57"
+
 open System.Reflection
 open Microsoft.FSharp.Core.CompilerServices
 open Samples.FSharp.ProvidedTypes
@@ -141,10 +143,14 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
                 let ty = ProvidedTypeDefinition (thisAssembly, nameSpace, typeName, Some baseTy, IsErased=false, 
                                                  SuppressRelocation=false, HideObjectMethods=true)
                 let { TypesFactory.Types = childTypes; TypesFactory.Init = init} = TypesFactory.transform readOnly None (Yaml.parse yaml)
-                let rootCtr = typeof<Root>.GetConstructor [|typeof<string>|]
                 let ctr = ProvidedConstructor ([], InvokeCode = fun [me] -> init me)
                 match filePath with
-                | Some filePath -> ctr.BaseConstructorCall <- fun [me] -> rootCtr, [ <@@ filePath @@> ]
+                | Some filePath ->
+                    let saveMethod = 
+                        ProvidedMethod("Save", [], typeof<unit>, 
+                                       InvokeCode = fun [me] -> <@@ (%%me: Root).Save (filePath = filePath) @@>)
+                    saveMethod.AddXmlDocDelayed (fun _ -> sprintf "Saves content into %s." filePath)
+                    ty.AddMember saveMethod
                 | None -> ()
                 ty.AddMembers (ctr :> MemberInfo :: childTypes)
                 let assemblyPath = Path.ChangeExtension(System.IO.Path.GetTempFileName(), ".dll")
