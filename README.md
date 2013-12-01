@@ -13,6 +13,8 @@ When you push a system into production, you can modify the configs with scripts 
 
 Examples
 ========
+Using configuration from a C# code
+----------------------------------
 Let's create a F# project, add ```Settings.yaml``` file into it:
 ```
 Mail:
@@ -41,7 +43,7 @@ namespace Settings
 open FSharp.Data.Experimental
 type Settings = Yaml<"Settings.yaml">
 ```
-Compile it. Now we have assembly Settings.dll containig generated types with the default values set in thier construcors.
+Compile it. Now we have assembly Settings.dll containing generated types with the default values set in thier construcors.
 Let's test it in a C# project. Create a Console Application, add reference to FSharp.Data.Experimental.YamlTypeProvider.dll and Setting project. 
 First, try to create an instance of our generated Settings type and check that all the values are there:
 ```csharp
