@@ -15,7 +15,7 @@ Examples
 ========
 Using configuration from a C# code
 ----------------------------------
-Let's create a F# project, add reference to `FSharp.Data.Experimental.YamlTypeProvider.dll` add `Settings.yaml` file into it:
+Let's create a F# project, add reference to `FSharp.Data.Experimental.YamlTypeProvider.dll`, then add the following `Settings.yaml` file into it:
 ```
 Mail:
   Smtp:
@@ -45,15 +45,12 @@ type Settings = Yaml<"Settings.yaml">
 ```
 Compile it. Now we have assembly Settings.dll containing generated types with the default values set in thier constructors.
 
-Let's test it in a C# project. Create a Console Application, add reference to FSharp.Data.Experimental.YamlTypeProvider.dll and Setting project. 
-First, try to create an instance of our generated Settings type and check that all the values are there:
+Let's test it in a C# project. Create a Console Application, add reference to `FSharp.Data.Experimental.YamlTypeProvider.dll` and our `Setting` project. 
+
+First, we'll try to create an instance of our generated `Settings` type and check that all the values are there:
 ```csharp
-static void Main(string[] args)
-{
-    var settings = new Settings.Settings();
-    Console.WriteLine(string.Format("Default settings:\n{0}", settings));
-    Console.ReadLine();
-}
+var settings = new Settings.Settings();
+Console.WriteLine(string.Format("Default settings:\n{0}", settings));
 ```
 It should outputs this:
 ```
@@ -78,8 +75,8 @@ DB:
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:05:00
 ```
-It's not very interesting so far, as the main purpose of any settings is to be changed in runtime. 
-Add the following ```RuntimeSettings.yaml``` into the C# console project:
+It's not very interesting so far, as the main purpose of any settings is to be loaded from a config file at runtime. 
+So, add the following ```RuntimeSettings.yaml``` into the C# console project:
 ```
 Mail:
   Smtp:
@@ -135,4 +132,8 @@ DB:
 ```
 Great! Values have been updated properly, new user has been added into ```ErrorNotificationRecipients``` list.
 
-In the next example we'll change configs in statically typed manner, via F# scripts.
+Using F# scripts for generating different variants of the config
+----------------------------------------------------------------
+In this example we'll change configs in statically typed manner, via F# scripts, which is very useful as you creating several variants of the configuration - one for developers, one to testers and several different variants (for each server "role") for production. Without statically typed scripts with intellisence this process quickly become very tedious and error prone. 
+
+[...coming soon...]
