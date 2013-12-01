@@ -155,4 +155,25 @@ settings.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")
 ```
 What's happening here? Firstly, we reference our `Settings.dll` which contains the settings types and also we have to reference the type provider assembly since it contains `Settings`'s base type (BTW, I think we should get rid of the base type entirely and replace Save() and Load() methods with extension ones sitting in another assembly).
 
-Then we create an instance of Settings and, finally, we mutate it with the familiar F# destructive assignment operator (<-) and save the changed config into a `ChangedSettings.yaml` file in the same directory where the script lays. 
+Then we create an instance of Settings and, finally, we mutate it with the familiar F# destructive assignment operator (<-) and save the changed config into a `ChangedSettings.yaml` file in the same directory where the script lays. It should contain the following Yaml:
+```
+Mail:
+  Smtp:
+    Host: smtp.sample.com
+    Port: 443
+    User: user1
+    Password: pass1
+  Pop3:
+    Host: pop3.sample.com
+    Port: 400
+    User: user2
+    Password: pass2
+    CheckPeriod: 00:01:00
+  ErrorNotificationRecipients:
+  - user1@sample.com
+  - user2@sample.com
+DB:
+  ConnectionString: new connection string
+  NumberOfDeadlockRepeats: 5
+  DefaultTimeout: 00:30:00
+```
