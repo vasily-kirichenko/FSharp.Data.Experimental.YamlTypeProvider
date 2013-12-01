@@ -14,7 +14,7 @@ When you push a system into production, you can modify the configs with scripts 
 Examples
 ========
 Let's create a F# project, add ```Settings.yaml``` file into it:
-```yml
+```
 Mail:
   Smtp:
     Host: smtp.sample.com
