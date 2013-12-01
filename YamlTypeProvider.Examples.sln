@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D9935E9C-69B8-476E-82AB-82372356B4C5}"
 	ProjectSection(SolutionItems) = preProject
 		examples\ChangeSettings.fsx = examples\ChangeSettings.fsx
+		examples\Script.fsx = examples\Script.fsx
 	EndProjectSection
 EndProject
 Global

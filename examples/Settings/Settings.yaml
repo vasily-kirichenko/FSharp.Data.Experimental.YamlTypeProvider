@@ -4,6 +4,7 @@ Mail:
     Port: 443
     User: user1
     Password: pass1
+    Ssl: true
   Pop3:
     Host: pop3.sample.com
     Port: 331
