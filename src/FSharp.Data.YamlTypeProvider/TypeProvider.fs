@@ -144,14 +144,14 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
                                                  SuppressRelocation=false, HideObjectMethods=true)
                 let types = TypesFactory.transform readOnly None (YamlParser.parse yaml)
                 let ctr = ProvidedConstructor ([], InvokeCode = fun [me] -> types.Init me)
-                match filePath with
-                | Some filePath ->
-                    let saveMethod = 
-                        ProvidedMethod("Save", [], typeof<unit>, 
-                                       InvokeCode = fun [me] -> <@@ (%%me: Root).Save (filePath = filePath) @@>)
-                    saveMethod.AddXmlDocDelayed (fun _ -> sprintf "Saves content into %s." filePath)
-                    ty.AddMember saveMethod
-                | None -> ()
+//                match filePath with
+//                | Some filePath ->
+//                    let saveMethod = 
+//                        ProvidedMethod("Save", [], typeof<unit>, 
+//                                       InvokeCode = fun [me] -> <@@ (%%me: Root).Save (filePath = filePath) @@>)
+//                    saveMethod.AddXmlDocDelayed (fun _ -> sprintf "Saves content into %s." filePath)
+//                    ty.AddMember saveMethod
+//                | None -> ()
                 ty.AddMembers (ctr :> MemberInfo :: types.Types)
                 let assemblyPath = Path.ChangeExtension(System.IO.Path.GetTempFileName(), ".dll")
                 let assembly = ProvidedAssembly assemblyPath 

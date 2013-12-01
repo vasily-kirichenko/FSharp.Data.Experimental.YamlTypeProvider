@@ -24,7 +24,7 @@
     <DocumentationFile>bin\Debug\FSharp.Data.YamlTypeProvider.XML</DocumentationFile>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe</StartProgram>
-    <StartArguments>L:\git\FSharp.Data.Experimental.YamlTypeProvider\\FSharp.Data.Experimental.YamlTypeProvider.sln</StartArguments>
+    <StartArguments>L:\git\FSharp.Data.Experimental.YamlTypeProvider\\YamlTypeProvider.Examples.sln</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,6 +54,8 @@
   <ItemGroup>
     <Compile Include="ProvidedTypes-head.fsi" />
     <Compile Include="ProvidedTypes-head.fs" />
+    <Compile Include="YamlParser.fs" />
+    <Compile Include="Root.fs" />
     <Compile Include="TypeProvider.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <None Include="TestScript.fsx" />
@@ -75,13 +77,6 @@
       <HintPath>..\..\packages\YamlDotNet.RepresentationModel.2.2.0\lib\net35\YamlDotNet.RepresentationModel.dll</HintPath>
       <Private>True</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FSharp.Data.YamlTypeProvider.Runtime\FSharp.Data.YamlTypeProvider.Runtime.fsproj">
-      <Name>FSharp.Data.YamlTypeProvider.Runtime</Name>
-      <Project>{7e8ca12c-e67d-4f10-af62-2e1182400ac7}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

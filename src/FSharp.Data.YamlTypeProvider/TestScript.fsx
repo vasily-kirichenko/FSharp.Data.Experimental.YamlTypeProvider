@@ -1,5 +1,4 @@
 #r @".\bin\Debug\FSharp.Data.YamlTypeProvider.dll"
-#r @".\bin\Debug\FSharp.Data.YamlTypeProvider.Runtime.dll"
 
 open System
 open FSharp.Data.Experimental

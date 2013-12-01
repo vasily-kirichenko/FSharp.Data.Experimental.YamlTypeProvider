@@ -1,0 +1,21 @@
+Mail:
+  Smtp:
+    Host: smtp2.sample.com
+    Port: 444
+    User: user11
+    Password: pass11
+  Pop3:
+    Host: pop32.sample.com
+    Port: 332
+    User: user2
+    Password: pass2
+    CheckPeriod: 00:02:00
+  ErrorNotificationRecipients:
+    - user11@sample.com
+    - user22@sample.com
+DB:
+  ConnectionString: Data Source=server2;Initial Catalog=Database1;Integrated Security=SSPI;
+  NumberOfDeadlockRepeats: 5
+  DefaultTimeout: 00:10:00
+
+        
