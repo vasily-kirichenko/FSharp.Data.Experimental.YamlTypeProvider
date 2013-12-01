@@ -136,4 +136,23 @@ Using F# scripts for generating different variants of the config
 ----------------------------------------------------------------
 In this example we'll change configs in statically typed manner, via F# scripts, which is very useful as you creating several variants of the configuration - one for developers, one to testers and several different variants (for each server "role") for production. Without statically typed scripts with intellisence this process quickly become very tedious and error prone. 
 
-[...coming soon...]
+Let's go ahead. 
+
+Create a F# script file `ChangeSettings.fsx` with following content:
+```fsharp
+#r @"Settings\bin\Debug\FSharp.Data.YamlTypeProvider.dll"
+#r @"Settings\bin\Debug\Settings.dll"
+
+open System
+
+let settings = Settings.Settings()
+
+settings.Mail.Pop3.Port <- 400
+settings.DB.ConnectionString <- "new connection string"
+settings.DB.DefaultTimeout <- TimeSpan.FromMinutes 30.
+
+settings.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")
+```
+What's happening here? Firstly, we reference our `Settings.dll` which contains the settings types and also we have to reference the type provider assembly since it contains `Settings`'s base type (BTW, I think we should get rid of the base type entirely and replace Save() and Load() methods with extension ones sitting in another assembly).
+
+Then we create an instance of Settings and, finally, we mutate it with the familiar F# destructive assignment operator (<-) and save the changed config into a `ChangedSettings.yaml` file in the same directory where the script lays. 
