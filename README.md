@@ -132,7 +132,7 @@ DB:
 ```
 Great! Values have been updated properly, new user has been added into ```ErrorNotificationRecipients``` list.
 
-Using F# scripts for generating different variants of the config
+Using F# scripts to produce different variants of the config
 ----------------------------------------------------------------
 In this example we'll change configs in statically typed manner, via F# scripts, which is very useful as you creating several variants of the configuration - one for developers, one to testers and several different variants (for each server "role") for production. Without statically typed scripts with intellisence this process quickly become very tedious and error prone. 
 
