@@ -18,5 +18,3 @@ DB:
   ConnectionString: Data Source=server2;Initial Catalog=Database1;Integrated Security=SSPI;
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:10:00
-
-        
