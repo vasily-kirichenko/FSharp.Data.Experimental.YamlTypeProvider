@@ -13,6 +13,7 @@ Mail:
   ErrorNotificationRecipients:
     - user11@sample.com
     - user22@sample.com
+    - new_user@sample.com
 DB:
   ConnectionString: Data Source=server2;Initial Catalog=Database1;Integrated Security=SSPI;
   NumberOfDeadlockRepeats: 5
