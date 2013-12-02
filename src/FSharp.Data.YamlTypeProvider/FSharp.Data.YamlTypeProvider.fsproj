@@ -24,7 +24,7 @@
     <DocumentationFile>bin\Debug\FSharp.Data.YamlTypeProvider.XML</DocumentationFile>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe</StartProgram>
-    <StartArguments>L:\git\FSharp.Data.Experimental.YamlTypeProvider\\YamlTypeProvider.Examples.sln</StartArguments>
+    <StartArguments>d:\git\FSharp.Data.Experimental.YamlTypeProvider\\YamlTypeProvider.Examples.sln</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -58,8 +58,8 @@
     <Compile Include="Root.fs" />
     <Compile Include="TypeProvider.fs" />
     <Compile Include="AssemblyInfo.fs" />
+    <None Include="Script.fsx" />
     <None Include="TestScript.fsx" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -67,20 +67,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="SharpYaml">
-      <HintPath>..\..\packages\SharpYaml.1.1.0\lib\SharpYaml.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\lib\SharpYaml\SharpYaml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="YamlDotNet.Core">
-      <HintPath>..\..\packages\YamlDotNet.Core.2.2.0\lib\net35\YamlDotNet.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="YamlDotNet.RepresentationModel">
-      <HintPath>..\..\packages\YamlDotNet.RepresentationModel.2.2.0\lib\net35\YamlDotNet.RepresentationModel.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

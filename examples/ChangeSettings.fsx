@@ -1,4 +1,4 @@
-﻿#r @"Settings\bin\Debug\FSharp.Data.YamlTypeProvider.dll"
+﻿#r @"..\src\FSharp.Data.YamlTypeProvider\bin\Debug\FSharp.Data.YamlTypeProvider.dll"
 #r @"Settings\bin\Debug\Settings.dll"
 
 open System

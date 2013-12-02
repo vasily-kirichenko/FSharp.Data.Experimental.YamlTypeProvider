@@ -1,8 +1,10 @@
 ﻿namespace FSharp.Data.Experimental
 
 open System.IO
+open SharpYaml.Serialization
 
 type Root () = 
+    let serializer = Serializer(SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false))
     /// Load Yaml text and update itself with it.
     member x.LoadText (yamlText: string) =
         YamlParser.parse yamlText |> YamlParser.update x
@@ -18,7 +20,6 @@ type Root () =
         x.Save writer
     /// Saves content into a TestWriter.
     member x.Save (writer: TextWriter) =
-        let serializer = YamlDotNet.RepresentationModel.Serialization.Serializer()
         serializer.Serialize(writer, x)
     /// Saves content into a file.
     member x.Save (filePath: string) =

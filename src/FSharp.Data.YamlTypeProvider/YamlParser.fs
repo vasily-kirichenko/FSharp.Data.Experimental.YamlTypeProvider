@@ -3,8 +3,9 @@
 open System
 open System.IO
 open System.Reflection
-open YamlDotNet.Core
-open YamlDotNet.RepresentationModel
+open System.Collections.Generic
+open SharpYaml
+open SharpYaml.Serialization
 
 type Scalar =
     | Int of int
@@ -32,23 +33,19 @@ type Node =
     | List of Node list
     | Map of (string * Node) list
 
-let parse text =
-    let rec loop (n: YamlNode) =
+let parse : (string -> Node) =
+    let rec loop (n: obj) =
         match n with
-        | :? YamlScalarNode as n -> Scalar (Scalar.Parse n.Value)
-        | :? YamlSequenceNode as n -> List (n.Children |> Seq.map loop |> Seq.toList)
-        | :? YamlMappingNode as n -> 
-            Map (n.Children |> Seq.choose (fun p -> 
+        | :? List<obj> as l -> Node.List (l |> Seq.map loop |> Seq.toList)
+        | :? Dictionary<obj,obj> as m -> 
+            Map (m |> Seq.choose (fun p -> 
                 match p.Key with
-                | :? YamlScalarNode as keyNode -> Some (keyNode.Value, loop p.Value)
+                | :? string as key -> Some (key, loop p.Value)
                 | _ -> None) |> Seq.toList)
-        | x -> failwithf "Unsupported YAML node type: %s" (x.GetType().Name)
+        | scalar -> Scalar (Scalar.Parse (scalar.ToString()))
 
-    let stream = YamlStream()
-    use reader = new StringReader(text)
-    stream.Load(reader)
-    let doc = stream.Documents.[0]
-    loop doc.RootNode
+    let serializer = Serializer(SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false))
+    fun text -> serializer.Deserialize(fromText=text) |> loop
 
 let update (target: 'a) (updater: Node) =
     let getBoxedNodeValue =

@@ -4,9 +4,10 @@ Mail:
     Port: 444
     User: user11
     Password: pass11
+    Ssl: false
   Pop3:
     Host: pop32.sample.com
-    Port: 332
+    Port: 0
     User: user2
     Password: pass2
     CheckPeriod: 00:02:00
