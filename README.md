@@ -75,6 +75,12 @@ DB:
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:05:00
 ```
+And, of course, we now able to access all the config data in a nice way like this:
+```fsharp
+let pop3host = settings.Mail.Pop3.Host
+// result
+val pop3host : string = "pop3.sample.com"
+```
 It's not very interesting so far, as the main purpose of any settings is to be loaded from a config file at runtime. 
 So, add the following ```RuntimeSettings.yaml``` into the C# console project:
 ```
