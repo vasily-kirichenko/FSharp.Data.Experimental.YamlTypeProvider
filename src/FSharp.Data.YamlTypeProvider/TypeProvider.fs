@@ -95,10 +95,7 @@ module TypesFactory =
             let ctr = ProvidedConstructor([], InvokeCode = (fun [me] -> childInits me))
             mapTy.AddMembers (ctr :> MemberInfo :: childTypes)
             let field = ProvidedField("_" + name, mapTy)
-
-            let prop = ProvidedProperty (name, mapTy, IsStatic=false, 
-                                         GetterCode = (fun [me] -> Expr.FieldGet(me, field)),
-                                         SetterCode = (fun [me;v] -> Expr.FieldSet(me, field, v)))
+            let prop = ProvidedProperty (name, mapTy, IsStatic=false, GetterCode = (fun [me] -> Expr.FieldGet(me, field)))
 
             { MainType = Some (mapTy :> _)
               Types = [mapTy :> MemberInfo; field :> MemberInfo; prop :> MemberInfo]
