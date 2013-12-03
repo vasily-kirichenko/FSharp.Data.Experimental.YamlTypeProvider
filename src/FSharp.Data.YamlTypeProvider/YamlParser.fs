@@ -12,6 +12,7 @@ type Scalar =
     | String of string
     | TimeSpan of TimeSpan
     | Bool of bool
+    | Uri of Uri
     static member Parse (value: string) =
         match bool.TryParse value with
         | true, x -> Bool x
@@ -20,13 +21,16 @@ type Scalar =
             | true, x -> Int x
             | _ -> match TimeSpan.TryParse value with
                     | true, x -> TimeSpan x
-                    | _ -> String value
+                    | _ -> match Uri.TryCreate(value, UriKind.Absolute) with
+                           | true, x -> Uri x 
+                           | _ -> String value
     member x.UnderlyingType = 
         match x with
         | Int x -> x.GetType()
         | String x -> x.GetType()
         | Bool x -> x.GetType()
         | TimeSpan x -> x.GetType()
+        | Uri x -> x.GetType()
         
 type Node =
     | Scalar of Scalar
@@ -54,6 +58,7 @@ let update (target: 'a) (updater: Node) =
         | String x -> box x
         | TimeSpan x -> box x
         | Bool x -> box x
+        | Uri x -> box x
 
     let getField o name =
         let ty = o.GetType()

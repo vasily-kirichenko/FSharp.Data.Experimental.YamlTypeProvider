@@ -22,6 +22,9 @@ module TypesFactory =
             | TimeSpan x -> 
                 let parse = typeof<TimeSpan>.GetMethod("Parse", [|typeof<string>|])
                 Expr.Call(parse, [Expr.Value (x.ToString())])
+            | Uri x ->
+                let ctr = typeof<Uri>.GetConstructor [|typeof<string>|]
+                Expr.NewObject(ctr, [Expr.Value x.OriginalString])
 
     type T =
         { MainType: Type option
@@ -90,7 +93,7 @@ module TypesFactory =
         let childTypes, childInits = foldChildren readOnly children
         match name with
         | Some name ->
-            let mapTy = ProvidedTypeDefinition(name, Some typeof<obj>, HideObjectMethods=true, 
+            let mapTy = ProvidedTypeDefinition(name + "_Type", Some typeof<obj>, HideObjectMethods=true, 
                                                IsErased=false, SuppressRelocation=false)
             let ctr = ProvidedConstructor([], InvokeCode = (fun [me] -> childInits me))
             mapTy.AddMembers (ctr :> MemberInfo :: childTypes)

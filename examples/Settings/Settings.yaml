@@ -18,5 +18,5 @@ DB:
   ConnectionString: Data Source=server1;Initial Catalog=Database1;Integrated Security=SSPI;
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:05:00
-
+Dashboard: http://sample.domain.com/dashboard.xml
         
