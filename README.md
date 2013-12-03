@@ -13,7 +13,7 @@ When you push a system into production, you can modify the configs with scripts 
 
 Examples
 ========
-Using configuration from a C# code
+Using configuration from C#
 ----------------------------------
 Let's create a F# project, add reference to `FSharp.Data.Experimental.YamlTypeProvider.dll`, then add the following `Settings.yaml` file into it:
 ```
