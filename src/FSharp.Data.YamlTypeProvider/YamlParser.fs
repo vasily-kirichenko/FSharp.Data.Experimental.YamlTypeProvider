@@ -15,7 +15,7 @@ type Scalar =
     | Uri of Uri
     static member Parse (value: string) =
         let isUri (value: string) = 
-            ["http";"https";"ftp";"ftps";"sftp"] 
+            ["http";"https";"ftp";"ftps";"sftp";"amqp"] 
             |> List.exists (fun x -> value.Trim().StartsWith(x + ":", StringComparison.InvariantCultureIgnoreCase))
 
         match bool.TryParse value with
