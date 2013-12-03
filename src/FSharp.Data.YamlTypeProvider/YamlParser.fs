@@ -14,6 +14,10 @@ type Scalar =
     | Bool of bool
     | Uri of Uri
     static member Parse (value: string) =
+        let isUri (value: string) = 
+            ["http";"https";"ftp";"ftps";"sftp"] 
+            |> List.exists (fun x -> value.Trim().StartsWith(x + ":", StringComparison.InvariantCultureIgnoreCase))
+
         match bool.TryParse value with
         | true, x -> Bool x
         | _ ->
@@ -21,9 +25,10 @@ type Scalar =
             | true, x -> Int x
             | _ -> match TimeSpan.TryParse value with
                     | true, x -> TimeSpan x
-                    | _ -> match Uri.TryCreate(value, UriKind.Absolute) with
-                           | true, x -> Uri x 
-                           | _ -> String value
+                    | _ -> 
+                        match isUri value, Uri.TryCreate(value, UriKind.Absolute) with
+                        | true, (true, x) -> Uri x 
+                        | _ -> String value
     member x.UnderlyingType = 
         match x with
         | Int x -> x.GetType()
