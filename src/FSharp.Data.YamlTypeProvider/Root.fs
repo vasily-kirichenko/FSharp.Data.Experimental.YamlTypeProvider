@@ -1,10 +1,25 @@
 ﻿namespace FSharp.Data.Experimental
 
+open System
 open System.IO
 open SharpYaml.Serialization
+open SharpYaml.Serialization.Serializers
 
 type Root () = 
-    let serializer = Serializer(SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false))
+    let serializer = 
+        let settings = SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false)
+        settings.RegisterSerializer(typeof<System.Uri>, 
+                                    { new ScalarSerializerBase() with
+                                        member x.ConvertFrom (ctx, scalar) = 
+                                                match System.Uri.TryCreate(scalar.Value, UriKind.Absolute) with
+                                                | true, uri -> box uri
+                                                | _ -> null
+                                        member x.ConvertTo ctx = 
+                                                match ctx.Instance with
+                                                | :? Uri as uri ->  uri.OriginalString
+                                                | _ -> "" })
+        Serializer(settings)
+    
     /// Load Yaml text and update itself with it.
     member x.LoadText (yamlText: string) =
         YamlParser.parse yamlText |> YamlParser.update x

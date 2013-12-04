@@ -6,6 +6,7 @@ open System.Reflection
 open System.Collections.Generic
 open SharpYaml
 open SharpYaml.Serialization
+open SharpYaml.Serialization.Serializers
 
 type Scalar =
     | Int of int
@@ -53,7 +54,8 @@ let parse : (string -> Node) =
                 | _ -> None) |> Seq.toList)
         | scalar -> Scalar (Scalar.Parse (scalar.ToString()))
 
-    let serializer = Serializer(SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false))
+    let settings = SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false)
+    let serializer = Serializer(settings)
     fun text -> serializer.Deserialize(fromText=text) |> loop
 
 let update (target: 'a) (updater: Node) =

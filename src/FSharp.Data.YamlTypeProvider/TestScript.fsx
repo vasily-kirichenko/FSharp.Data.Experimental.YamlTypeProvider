@@ -12,6 +12,9 @@ K1:
     K11:
         - L11
         - L12
+        -
+          N: D
+          C: 1
     K12: V12
 K2:
     K21: true
@@ -21,6 +24,8 @@ K2:
     K22: V22
     K24: 00:01:00
 """
+
+YamlParser.parse yaml
 
 type T = Yaml<YamlText=yaml>
 

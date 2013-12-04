@@ -9,5 +9,6 @@ settings.Mail.Pop3.Port <- 400
 settings.DB.ConnectionString <- "new connection string"
 settings.DB.DefaultTimeout <- TimeSpan.FromMinutes 30.
 settings.Dashboard
+settings.Dashboard <- Uri("ftp://new.com/1.html")
 
 settings.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")
