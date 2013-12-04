@@ -7,7 +7,7 @@ open SharpYaml.Serialization.Serializers
 
 type Root () = 
     let serializer = 
-        let settings = SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false)
+        let settings = SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false, EmitAlias=false)
         settings.RegisterSerializer(typeof<System.Uri>, 
                                     { new ScalarSerializerBase() with
                                         member x.ConvertFrom (ctx, scalar) = 
@@ -16,7 +16,7 @@ type Root () =
                                                 | _ -> null
                                         member x.ConvertTo ctx = 
                                                 match ctx.Instance with
-                                                | :? Uri as uri ->  uri.OriginalString
+                                                | :? Uri as uri -> uri.OriginalString
                                                 | _ -> "" })
         Serializer(settings)
     

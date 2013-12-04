@@ -63,7 +63,10 @@ module TypesFactory =
                                  (types |> List.map (Option.map (fun x -> x.Name)))
 
         let fieldType = typedefof<ResizeArray<_>>.MakeGenericType elementType
-        let propType = typedefof<IReadOnlyList<_>>.MakeGenericType elementType
+        let propType =
+            match readOnly with
+            | true -> typedefof<IReadOnlyList<_>>.MakeGenericType elementType
+            | false ->  typedefof<IList<_>>.MakeGenericType elementType
         let field = ProvidedField("_" +  name, fieldType)
         let prop = ProvidedProperty (name, propType, IsStatic=false, GetterCode = (fun [me] -> Expr.Coerce(Expr.FieldGet(me, field), propType)))
         let listCtr = fieldType.GetConstructor([|typedefof<seq<_>>.MakeGenericType elementType|])

@@ -19,6 +19,8 @@ DB:
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:05:00
 Dashboard: http://sample.domain.com/dashboard.xml
+Collaborations: [ "http://sample.domain.com/dashboard.xml" ]
 SharedFile: \\server\dir\file.txt
 LocalFile: c:\dir\file.txt
+RelativePath: ..\AvpBasesUpdater\AvpBases\KdcProduction
         

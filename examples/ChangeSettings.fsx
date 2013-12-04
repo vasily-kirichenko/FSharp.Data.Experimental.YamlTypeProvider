@@ -3,12 +3,15 @@
 
 open System
 
-let settings = Settings.Settings()
-let pop3host = settings.Mail.Pop3.Host
-settings.Mail.Pop3.Port <- 400
-settings.DB.ConnectionString <- "new connection string"
-settings.DB.DefaultTimeout <- TimeSpan.FromMinutes 30.
-settings.Dashboard
-settings.Dashboard <- Uri("ftp://new.com/1.html")
+let s = Settings.Settings()
+let pop3host = s.Mail.Pop3.Host
+s.Mail.Pop3.Port <- 400
+s.DB.ConnectionString <- "new connection string"
+s.DB.DefaultTimeout <- TimeSpan.FromMinutes 30.
+s.Dashboard
+s.Dashboard <- Uri("ftp://new.com/1.html")
+s.Mail.ErrorNotificationRecipients <- [|"s1"|]
+s.Collaborations <- [| Uri ("http://1.com") |]
+s.RelativePath <- "..\AvpBasesUpdater\AvpBases\KdcProduction"
 
-settings.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")
+s.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")
