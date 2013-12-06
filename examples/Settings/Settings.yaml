@@ -23,5 +23,4 @@ Collaborations: [ "http://sample.domain.com/dashboard.xml" ]
 SharedFile: \\server\dir\file.txt
 LocalFile: c:\dir\file.txt
 RelativePath: ..\AvpBasesUpdater\AvpBases\KdcProduction
-
         

@@ -102,6 +102,13 @@ module TypesFactory =
             mapTy.AddMembers (ctr :> MemberInfo :: childTypes)
             let field = ProvidedField("_" + name, mapTy)
             let prop = ProvidedProperty (name, mapTy, IsStatic=false, GetterCode = (fun [me] -> Expr.FieldGet(me, field)))
+            
+//            let eventFieldType = typedefof<Event<_>>.MakeGenericType mapTy
+//            let eventField = ProvidedField("_onChanged", eventFieldType)
+//            let eventType = typedefof<EventHandler<_>>.MakeGenericType mapTy
+//            let event = ProvidedEvent(name + "Changed", eventType, 
+//                                      AdderCode = (fun [me;value] -> Expr.FieldSet(eventField, value))
+//            mapTy.AddMember event
 
             { MainType = Some (mapTy :> _)
               Types = [mapTy :> MemberInfo; field :> MemberInfo; prop :> MemberInfo]
@@ -111,12 +118,18 @@ module TypesFactory =
 [<TypeProvider>]
 type public YamlProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces()
+    let mutable watcher: FileSystemWatcher option = None
+
+    let disposeWatcher() =
+        watcher |> Option.iter (fun x -> (x :> IDisposable).Dispose())
+        watcher <- None
 
     let thisAssembly = Assembly.GetExecutingAssembly()
     let nameSpace = this.GetType().Namespace
     let baseTy = typeof<Root>
     
     let watchForChanges (fileName: string) =
+        disposeWatcher()
         let fileName = 
             match Path.IsPathRooted fileName with
             | true -> fileName
@@ -124,15 +137,18 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
 
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
-        let watcher = new FileSystemWatcher(Filter = name, Path = path)
-        watcher.NotifyFilter <- 
-            NotifyFilters.FileName
-            ||| NotifyFilters.DirectoryName
-            ||| NotifyFilters.CreationTime 
-            ||| NotifyFilters.LastWrite 
-            ||| NotifyFilters.Size
-        watcher.Changed.Add (fun _ -> this.Invalidate())
-        watcher.EnableRaisingEvents <- true
+        let w = new FileSystemWatcher(Filter = name, Path = path,
+                                      NotifyFilter = (NotifyFilters.FileName |||
+                                                      NotifyFilters.DirectoryName |||
+                                                      NotifyFilters.CreationTime ||| 
+                                                      NotifyFilters.LastWrite ||| 
+                                                      NotifyFilters.Size |||
+                                                      NotifyFilters.LastAccess |||
+                                                      NotifyFilters.Attributes |||
+                                                      NotifyFilters.Security))
+        w.Changed.Add (fun _ -> this.Invalidate())
+        w.EnableRaisingEvents <- true
+        watcher <- Some w
 
     let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
     let staticParams = 
@@ -182,6 +198,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             | _ -> failwith "Wrong parameters")
     
     do this.AddNamespace(nameSpace, [newT])
+    interface IDisposable with member x.Dispose() = disposeWatcher()
 
 [<TypeProviderAssembly>]
 do ()
