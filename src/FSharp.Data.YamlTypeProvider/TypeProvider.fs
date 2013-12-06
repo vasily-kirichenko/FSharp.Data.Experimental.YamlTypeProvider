@@ -63,16 +63,16 @@ module TypesFactory =
                                  (types |> List.map (Option.map (fun x -> x.Name)))
 
         let fieldType = typedefof<ResizeArray<_>>.MakeGenericType elementType
+        
         let propType =
-            match readOnly with
-            | true -> typedefof<IReadOnlyList<_>>.MakeGenericType elementType
-            | false ->  typedefof<IList<_>>.MakeGenericType elementType
-        let field = ProvidedField("_" +  name, fieldType)
+            (match readOnly with
+             | true -> typedefof<IReadOnlyList<_>>
+             | false -> typedefof<IList<_>>).MakeGenericType elementType
+
+        let field = ProvidedField("_" + name, fieldType)
         let prop = ProvidedProperty (name, propType, IsStatic=false, GetterCode = (fun [me] -> Expr.Coerce(Expr.FieldGet(me, field), propType)))
         let listCtr = fieldType.GetConstructor([|typedefof<seq<_>>.MakeGenericType elementType|])
-        if not readOnly then 
-            prop.SetterCode <- fun [me;v] -> Expr.FieldSet(me, field, Expr.NewObject(listCtr, [v]))
-
+        if not readOnly then prop.SetterCode <- fun [me;v] -> Expr.FieldSet(me, field, Expr.NewObject(listCtr, [v]))
         let childTypes = elements |> List.collect (fun x -> x.Types)
         let initValue me = Expr.NewObject(listCtr, [Expr.NewArray(elementType, elements |> List.map (fun x -> x.Init me))])
 
@@ -116,15 +116,23 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
     let nameSpace = this.GetType().Namespace
     let baseTy = typeof<Root>
     
-    let watchForChanges (fileName: string) = 
+    let watchForChanges (fileName: string) =
+        let fileName = 
+            match Path.IsPathRooted fileName with
+            | true -> fileName
+            | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
+
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
-        //File.WriteAllText(@"e:\999999.txt", sprintf "ResolvedFileName = %s, Path = %s, Name = %s" fileName path name)
         let watcher = new FileSystemWatcher(Filter = name, Path = path)
-        watcher.Changed.Add(fun _ -> this.Invalidate())
-//        watcher.Changed.Add(fun e -> 
-//            use w = new StreamWriter(@"e:\999999.txt", true)
-//            w.WriteLine(sprintf "%s %A" e.Name e.ChangeType))
+
+        // For some strange reason the watcher raises Deleted event only if a file is changed inside VS.
+        // We subscribe for all the events for better safety. 
+        watcher.Changed
+        |> Event.merge watcher.Created
+        |> Event.merge watcher.Deleted
+        |> Event.add (fun _ -> this.Invalidate())
+
         watcher.EnableRaisingEvents <- true
 
     let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
