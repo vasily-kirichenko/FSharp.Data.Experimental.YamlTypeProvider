@@ -8,12 +8,8 @@ open System.Collections.Generic
 open FSharp.Data.Experimental
 
 let watcher = new FileSystemWatcher(Filter = "Settings.yaml", Path = @"d:\git\FSharp.Data.Experimental.YamlTypeProvider\examples\Settings")
-
-watcher.Changed
-|> Event.merge watcher.Created
-|> Event.merge watcher.Deleted
-|> Event.add (fun e -> Console.WriteLine (sprintf "\n%s %A" e.Name e.ChangeType))
-
+watcher.Changed.Add (fun e -> Console.WriteLine (sprintf "\n%s %A" e.Name e.ChangeType))
+watcher.NotifyFilter <- NotifyFilters.CreationTime ||| NotifyFilters.LastWrite ||| NotifyFilters.Size
 watcher.EnableRaisingEvents <- true
 watcher.Dispose()
 

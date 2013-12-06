@@ -125,14 +125,13 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
         let watcher = new FileSystemWatcher(Filter = name, Path = path)
-
-        // For some strange reason the watcher raises Deleted event only if a file is changed inside VS.
-        // We subscribe for all the events for better safety. 
-        watcher.Changed
-        |> Event.merge watcher.Created
-        |> Event.merge watcher.Deleted
-        |> Event.add (fun _ -> this.Invalidate())
-
+        watcher.NotifyFilter <- 
+            NotifyFilters.FileName
+            ||| NotifyFilters.DirectoryName
+            ||| NotifyFilters.CreationTime 
+            ||| NotifyFilters.LastWrite 
+            ||| NotifyFilters.Size
+        watcher.Changed.Add (fun _ -> this.Invalidate())
         watcher.EnableRaisingEvents <- true
 
     let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
