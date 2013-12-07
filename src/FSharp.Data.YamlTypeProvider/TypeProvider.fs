@@ -6,9 +6,11 @@ open System.Reflection
 open Microsoft.FSharp.Core.CompilerServices
 open Samples.FSharp.ProvidedTypes
 open System
+open System.Diagnostics
 open Microsoft.FSharp.Quotations
 open System.IO
 open System.Collections.Generic
+open System.Threading
 
 module TypesFactory =
     open YamlParser
@@ -130,11 +132,13 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
     
     let watchForChanges (fileName: string) =
         disposeWatcher()
+        
         let fileName = 
             match Path.IsPathRooted fileName with
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
 
+        let lastWrite = ref (File.GetLastWriteTime fileName).Ticks
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
         let w = new FileSystemWatcher(Filter = name, Path = path,
@@ -146,7 +150,37 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
                                                       NotifyFilters.LastAccess |||
                                                       NotifyFilters.Attributes |||
                                                       NotifyFilters.Security))
-        w.Changed.Add (fun _ -> this.Invalidate())
+        let changed =
+            w.Changed 
+            |> Event.map (fun _ -> ())
+            |> Event.merge (w.Deleted |> Event.map (fun _ -> ()))
+            |> Event.merge (w.Renamed |> Event.map (fun _ -> ()))
+
+        async {
+            while true do
+                do! Async.AwaitEvent changed
+                let current = (File.GetLastWriteTime fileName).Ticks
+                let old = Interlocked.Exchange (lastWrite, current)
+                if old <> current then
+                    Trace.WriteLine(sprintf "[%d] %d <> %d" Thread.CurrentThread.ManagedThreadId old current)
+                    this.Invalidate()
+        } |> Async.Start
+
+
+//        let invalidate _ =
+//            let previous = !lastWrite
+//            Trace.WriteLine(sprintf "[%d] previous = %d" Thread.CurrentThread.ManagedThreadId previous)
+//            let current = (File.GetLastWriteTime fileName).Ticks
+//            Trace.WriteLine(sprintf "[%d] current = %d" Thread.CurrentThread.ManagedThreadId current)
+//            let old = Interlocked.CompareExchange(lastWrite, current, previous)
+//            Trace.WriteLine(sprintf "[%d] old = %d" Thread.CurrentThread.ManagedThreadId old)
+//            if current <> old then 
+//                Trace.WriteLine(sprintf "[%d] %d <> %d" Thread.CurrentThread.ManagedThreadId current old)
+//                this.Invalidate()
+
+        //w.Changed.Add invalidate
+        //w.Renamed.Add invalidate
+        //w.Deleted.Add invalidate
         w.EnableRaisingEvents <- true
         watcher <- Some w
 
