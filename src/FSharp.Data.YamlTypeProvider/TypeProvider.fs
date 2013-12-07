@@ -143,11 +143,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
 
-        let getLastWrite() = 
-            if File.Exists fileName 
-            then Some ((File.GetLastWriteTime fileName).Ticks) 
-            else None
-        
+        let getLastWrite() = File.GetLastWriteTime fileName
         let lastWrite = ref (getLastWrite())
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
@@ -183,18 +179,12 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             let curr = getLastWrite()
             log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
 
-            let needInvalidate = 
-                match !lastWrite, curr with
-                | Some _, None -> true
-                | None, Some _ -> true
-                | Some last, Some curr -> last <> curr
-                | None, None -> false
-            
-            if needInvalidate then
+            if !lastWrite <> curr then
                 lastWrite := curr
                 log "invalidate"
                 this.Invalidate()
 
+        w.Changed.Add invalidate
         w.Renamed.Add invalidate
         w.Deleted.Add invalidate
         w.EnableRaisingEvents <- true
