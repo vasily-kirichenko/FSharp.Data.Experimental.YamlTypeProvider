@@ -121,6 +121,11 @@ module TypesFactory =
 type public YamlProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces()
     let mutable watcher: FileSystemWatcher option = None
+    static let log = 
+        let w = new StreamWriter @"l:\Yaml.log"
+        fun msg -> lock w |> fun _ -> 
+            w.WriteLine (sprintf "[%O, %d] %s" DateTime.Now Thread.CurrentThread.ManagedThreadId msg)
+            w.Flush()
 
     let disposeWatcher() =
         watcher |> Option.iter (fun x -> (x :> IDisposable).Dispose())
@@ -138,49 +143,60 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
 
-        let lastWrite = ref (File.GetLastWriteTime fileName).Ticks
+        let getLastWrite() = 
+            if File.Exists fileName 
+            then Some ((File.GetLastWriteTime fileName).Ticks) 
+            else None
+        
+        let lastWrite = ref (getLastWrite())
         let path = Path.GetDirectoryName fileName
         let name = Path.GetFileName fileName
-        let w = new FileSystemWatcher(Filter = name, Path = path,
-                                      NotifyFilter = (NotifyFilters.FileName |||
-                                                      NotifyFilters.DirectoryName |||
-                                                      NotifyFilters.CreationTime ||| 
-                                                      NotifyFilters.LastWrite ||| 
-                                                      NotifyFilters.Size |||
-                                                      NotifyFilters.LastAccess |||
-                                                      NotifyFilters.Attributes |||
-                                                      NotifyFilters.Security))
-        let changed =
-            w.Changed 
-            |> Event.map (fun _ -> ())
-            |> Event.merge (w.Deleted |> Event.map (fun _ -> ()))
-            |> Event.merge (w.Renamed |> Event.map (fun _ -> ()))
+        let w = new FileSystemWatcher(Filter = name, Path = path)
 
-        async {
-            while true do
-                do! Async.AwaitEvent changed
-                let current = (File.GetLastWriteTime fileName).Ticks
-                let old = Interlocked.Exchange (lastWrite, current)
-                if old <> current then
-                    Trace.WriteLine(sprintf "[%d] %d <> %d" Thread.CurrentThread.ManagedThreadId old current)
-                    this.Invalidate()
-        } |> Async.Start
+// change
+//[07.12.2013 12:46:14, 36] Deleted (Deleted). LWT = 01.01.1601 4:00:00 (504911376000000000) 
+//[07.12.2013 12:46:14, 36] Renamed (Renamed). LWT = 07.12.2013 12:46:14 (635220171742164426) 
+//[07.12.2013 12:46:14, 46] Changed (Changed). LWT = 07.12.2013 12:46:14 (635220171742164426)
 
+// another change
+//[07.12.2013 12:44:03, 13] Deleted (Deleted). LWT = 07.12.2013 12:44:03 (635220170437799821) 
+//[07.12.2013 12:44:03, 13] Renamed (Renamed). LWT = 07.12.2013 12:44:03 (635220170437799821) 
+//[07.12.2013 12:44:03, 13] Changed (Changed). LWT = 07.12.2013 12:44:03 (635220170437799821) 
 
-//        let invalidate _ =
-//            let previous = !lastWrite
-//            Trace.WriteLine(sprintf "[%d] previous = %d" Thread.CurrentThread.ManagedThreadId previous)
-//            let current = (File.GetLastWriteTime fileName).Ticks
-//            Trace.WriteLine(sprintf "[%d] current = %d" Thread.CurrentThread.ManagedThreadId current)
-//            let old = Interlocked.CompareExchange(lastWrite, current, previous)
-//            Trace.WriteLine(sprintf "[%d] old = %d" Thread.CurrentThread.ManagedThreadId old)
-//            if current <> old then 
-//                Trace.WriteLine(sprintf "[%d] %d <> %d" Thread.CurrentThread.ManagedThreadId current old)
-//                this.Invalidate()
+// delete
+//[07.12.2013 12:44:53, 37] Deleted (Deleted). LWT = 01.01.1601 4:00:00 (504911376000000000) 
 
-        //w.Changed.Add invalidate
-        //w.Renamed.Add invalidate
-        //w.Deleted.Add invalidate
+// appearing deleted file
+//[07.12.2013 12:51:49, 35] Renamed (Renamed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+//[07.12.2013 12:51:49, 35] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+//[07.12.2013 12:51:49, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+
+// rename our file -> another
+//[07.12.2013 12:49:57, 20] Renamed (Renamed). LWT = 01.01.1601 4:00:00 (504911376000000000) 
+
+// rename another file -> our
+//[07.12.2013 12:50:55, 20] Renamed (Renamed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+//[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+//[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
+
+        let invalidate (args: FileSystemEventArgs) =
+            let curr = getLastWrite()
+            log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
+
+            let needInvalidate = 
+                match !lastWrite, curr with
+                | Some _, None -> true
+                | None, Some _ -> true
+                | Some last, Some curr -> last <> curr
+                | None, None -> false
+            
+            if needInvalidate then
+                lastWrite := curr
+                log "invalidate"
+                this.Invalidate()
+
+        w.Renamed.Add invalidate
+        w.Deleted.Add invalidate
         w.EnableRaisingEvents <- true
         watcher <- Some w
 
@@ -232,7 +248,10 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             | _ -> failwith "Wrong parameters")
     
     do this.AddNamespace(nameSpace, [newT])
-    interface IDisposable with member x.Dispose() = disposeWatcher()
+    interface IDisposable with 
+        member x.Dispose() = 
+            log "disposing"
+            disposeWatcher()
 
 [<TypeProviderAssembly>]
 do ()
