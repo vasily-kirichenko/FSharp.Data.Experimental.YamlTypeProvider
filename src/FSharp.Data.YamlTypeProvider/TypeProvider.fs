@@ -33,6 +33,28 @@ module TypesFactory =
           Types: MemberInfo list
           Init: Expr -> Expr }
 
+    let private generateChangedEvent =
+        let eventType = typeof<EventHandler>
+        let delegateType = typeof<Delegate>
+        let combineMethod = delegateType.GetMethod("Combine", [|delegateType; delegateType|])
+        let removeMethod = delegateType.GetMethod("Remove", [|delegateType; delegateType|])
+
+        fun() ->
+            let eventField = ProvidedField("_changed", eventType)
+            let event = ProvidedEvent("Changed", eventType)
+
+            let changeEvent m me v = 
+                let current = Expr.Coerce (Expr.FieldGet(me, eventField), delegateType)
+                let other = Expr.Coerce (v, delegateType)
+                Expr.Coerce (Expr.Call (m, [current; other]), eventType)
+
+            let adder = changeEvent combineMethod
+            let remover = changeEvent removeMethod
+
+            event.AdderCode <- fun [me; v] -> Expr.FieldSet(me, eventField, adder me v)
+            event.RemoverCode <- fun [me; v] -> Expr.FieldSet(me, eventField, remover me v)
+            eventField, event
+
     let rec transform readOnly name (node: Node) =
         match name, node with
         | Some name, Scalar (_ as x) -> transformScalar readOnly name x
@@ -96,6 +118,7 @@ module TypesFactory =
 
     and transformMap readOnly name (children: (string * Node) list) =
         let childTypes, childInits = foldChildren readOnly children
+        let eventField, event = generateChangedEvent()
         match name with
         | Some name ->
             let mapTy = ProvidedTypeDefinition(name + "_Type", Some typeof<obj>, HideObjectMethods=true, 
@@ -128,33 +151,13 @@ module TypesFactory =
 //            mapTy.AddMember eventField
 //            mapTy.AddMember event
 
-            let eventType = typeof<EventHandler>
-            let eventField = ProvidedField("_changed", eventType)
-            let event = ProvidedEvent("Changed", eventType)
-            let delegateType = typeof<Delegate>
-            let combineMethod = delegateType.GetMethod("Combine", [|delegateType; delegateType|])
-            let removeMethod = delegateType.GetMethod("Remove", [|delegateType; delegateType|])
-
-            let changeEvent m me v = 
-                let current = Expr.Coerce (Expr.FieldGet(me, eventField), delegateType)
-                let other = Expr.Coerce (v, delegateType)
-                Expr.Coerce (Expr.Call (m, [current; other]), eventType)
-
-            let adder = changeEvent combineMethod
-            let remover = changeEvent removeMethod
-
-            event.AdderCode <- fun [me; v] -> Expr.FieldSet(me, eventField, adder me v)
-            event.RemoverCode <- fun [me; v] -> Expr.FieldSet(me, eventField, remover me v)
-
             mapTy.AddMember eventField
             mapTy.AddMember event
-
-            //let h: EventHandler = EventHandler(fun _ (a: EventArgs) -> ())
 
             { MainType = Some (mapTy :> _)
               Types = [mapTy :> MemberInfo; field :> MemberInfo; prop :> MemberInfo]
               Init = fun me -> Expr.FieldSet(me, field, Expr.NewObject(ctr, [])) }
-        | None -> { MainType = None; Types = childTypes; Init = childInits }
+        | None -> { MainType = None; Types = [eventField :> MemberInfo; event :> MemberInfo] @ childTypes; Init = childInits }
 
 [<TypeProvider>]
 type public YamlProvider (cfg: TypeProviderConfig) as this =

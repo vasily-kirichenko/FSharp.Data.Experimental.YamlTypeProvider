@@ -7,6 +7,11 @@ open System.Reflection
 open System.Collections.Generic
 open FSharp.Data.Experimental
 
+type T() =
+    let e = Event<_>()
+    [<CLIEvent>]
+    member x.E = e.Publish
+
 let watcher = new FileSystemWatcher(Filter = "Settings.yaml", Path = @"d:\git\FSharp.Data.Experimental.YamlTypeProvider\examples\Settings")
 watcher.Changed.Add (fun e -> Console.WriteLine (sprintf "\n%s %A" e.Name e.ChangeType))
 watcher.NotifyFilter <- NotifyFilters.CreationTime ||| NotifyFilters.LastWrite ||| NotifyFilters.Size

@@ -73,9 +73,8 @@ let update (target: 'a) (updater: Node) =
         if field = null then failwithf "Field %s was not found in %s." name ty.Name
         field
 
-    let getRaiseChanged x = 
-        //x.GetType().GetEvent("Changed", BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.Instance)
-        x.GetType().GetField("Changed", BindingFlags.Instance ||| BindingFlags.NonPublic).GetValue(x) :?> MulticastDelegate 
+    let getChangedDelegate x = 
+        x.GetType().GetField("_changed", BindingFlags.Instance ||| BindingFlags.NonPublic).GetValue x :?> MulticastDelegate 
 
     let rec update (target: obj) name (updater: Node) =
         match name, updater with
@@ -97,7 +96,7 @@ let update (target: 'a) (updater: Node) =
         
             if oldValue <> newValue then
                 field.SetValue(target, newValue)
-                [getRaiseChanged target]
+                [getChangedDelegate target]
             else []
         | _ -> []
 
@@ -129,7 +128,7 @@ let update (target: 'a) (updater: Node) =
             let addMethod = fieldType.GetMethod("Add", [|elementType|])
             updaters |> List.iter (fun x -> addMethod.Invoke(list, [|getBoxedNodeValue x|]) |> ignore)
             field.SetValue(target, list)
-            [getRaiseChanged target]
+            [getChangedDelegate target]
         else []
 
     and updateMap (target: obj) name (updaters: (string * Node) list) =
@@ -142,13 +141,16 @@ let update (target: 'a) (updater: Node) =
                 mapProp.GetValue target
             | None -> target
 
-        updaters |> List.collect (fun (name, node) -> update target (Some name) node)
+        match updaters |> List.collect (fun (name, node) -> update target (Some name) node) with
+        | [] -> []
+        | events -> getChangedDelegate target :: events
 
     update target None updater
     |> Seq.filter ((<>) null)
     |> Seq.distinct
-    |> Seq.iter (fun raiseChanged -> 
-        raiseChanged.GetInvocationList() |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|target; EventArgs.Empty|]) |> ignore))
+    |> Seq.iter (fun changed -> 
+        changed.GetInvocationList() 
+        |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore))
     target
 
 
