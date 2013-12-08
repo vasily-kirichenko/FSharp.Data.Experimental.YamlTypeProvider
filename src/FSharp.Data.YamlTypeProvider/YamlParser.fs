@@ -147,10 +147,9 @@ let update (target: 'a) (updater: Node) =
 
     update target None updater
     |> Seq.filter ((<>) null)
-    |> Seq.distinct
-    |> Seq.iter (fun changed -> 
-        changed.GetInvocationList() 
-        |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore))
+    |> Seq.collect (fun x -> x.GetInvocationList())
+    |> Seq.distinctBy (fun x -> x.Target)
+    |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore)
     target
 
 
