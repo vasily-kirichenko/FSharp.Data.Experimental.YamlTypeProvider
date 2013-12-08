@@ -73,18 +73,33 @@ let update (target: 'a) (updater: Node) =
         if field = null then failwithf "Field %s was not found in %s." name ty.Name
         field
 
+    let getRaiseChanged x = 
+        //x.GetType().GetEvent("Changed", BindingFlags.Public ||| BindingFlags.NonPublic ||| BindingFlags.Instance)
+        x.GetType().GetField("Changed", BindingFlags.Instance ||| BindingFlags.NonPublic).GetValue(x) :?> MulticastDelegate 
+
     let rec update (target: obj) name (updater: Node) =
         match name, updater with
-        | Some name, Scalar (_ as x) -> updateScalar target name x
+        | _, Scalar (_ as x) -> updateScalar target name x 
         | _, Map m -> updateMap target name m
         | Some name, List l -> updateList target name l
         | None, _ -> failwithf "Only Maps are allowed at the root level."
     
     and updateScalar (target: obj) name (node: Scalar) =
-        let field = getField target ("_" + name)
-        if field.FieldType <> node.UnderlyingType then 
-            failwithf "Cannot assign value of type %s to field of type %s." node.UnderlyingType.Name field.FieldType.Name
-        field.SetValue(target, getBoxedNodeValue node)
+        match name with
+        | Some name -> 
+            let field = getField target ("_" + name)
+        
+            if field.FieldType <> node.UnderlyingType then 
+                failwithf "Cannot assign value of type %s to field of type %s." node.UnderlyingType.Name field.FieldType.Name
+
+            let oldValue = field.GetValue(target)
+            let newValue = getBoxedNodeValue node
+        
+            if oldValue <> newValue then
+                field.SetValue(target, newValue)
+                [getRaiseChanged target]
+            else []
+        | _ -> []
 
     and updateList (target: obj) name (updaters: Node list) =
         let updaters = updaters |> List.choose (function Scalar x -> Some x | _ -> None)
@@ -95,13 +110,27 @@ let update (target: 'a) (updater: Node) =
             | types -> failwithf "List cannot contain elements of heterohenius types (attempt to mix types: %A)." types
 
         let fieldType = typedefof<ResizeArray<_>>.MakeGenericType elementType
-
         let field = getField target ("_" + name)
         if field.FieldType <> fieldType then failwithf "Cannot assign %O to %O." fieldType.Name field.FieldType.Name
-        let list = Activator.CreateInstance(fieldType)
-        let addMethod = fieldType.GetMethod("Add", [|elementType|])
-        updaters |> List.iter (fun x -> addMethod.Invoke(list, [|getBoxedNodeValue x|]) |> ignore)
-        field.SetValue(target, list)
+
+        let sort (xs: obj seq) = 
+            xs 
+            |> Seq.sortBy (function
+               | :? Uri as uri -> uri.OriginalString :> IComparable
+               | :? IComparable as x -> x
+               | x -> failwithf "%A is not comparable, so it cannot be included into a list."  x)
+            |> Seq.toList
+
+        let oldValues = field.GetValue(target) :?> Collections.IEnumerable |> Seq.cast<obj> |> sort
+        let newValues = updaters |> List.map getBoxedNodeValue |> sort
+
+        if oldValues <> newValues then
+            let list = Activator.CreateInstance fieldType
+            let addMethod = fieldType.GetMethod("Add", [|elementType|])
+            updaters |> List.iter (fun x -> addMethod.Invoke(list, [|getBoxedNodeValue x|]) |> ignore)
+            field.SetValue(target, list)
+            [getRaiseChanged target]
+        else []
 
     and updateMap (target: obj) name (updaters: (string * Node) list) =
         let target = 
@@ -113,9 +142,13 @@ let update (target: 'a) (updater: Node) =
                 mapProp.GetValue target
             | None -> target
 
-        updaters |> List.iter (fun (name, node) -> update target (Some name) node)
+        updaters |> List.collect (fun (name, node) -> update target (Some name) node)
 
     update target None updater
+    |> Seq.filter ((<>) null)
+    |> Seq.distinct
+    |> Seq.iter (fun raiseChanged -> 
+        raiseChanged.GetInvocationList() |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|target; EventArgs.Empty|]) |> ignore))
     target
 
 

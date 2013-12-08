@@ -105,12 +105,51 @@ module TypesFactory =
             let field = ProvidedField("_" + name, mapTy)
             let prop = ProvidedProperty (name, mapTy, IsStatic=false, GetterCode = (fun [me] -> Expr.FieldGet(me, field)))
             
-//            let eventFieldType = typedefof<Event<_>>.MakeGenericType mapTy
-//            let eventField = ProvidedField("_onChanged", eventFieldType)
-//            let eventType = typedefof<EventHandler<_>>.MakeGenericType mapTy
-//            let event = ProvidedEvent(name + "Changed", eventType, 
-//                                      AdderCode = (fun [me;value] -> Expr.FieldSet(eventField, value))
+//            let eventArgsTy = ProvidedTypeDefinition("ChangedEventArgs", Some typeof<EventArgs>, IsErased=false, SuppressRelocation=false)
+//            let eventType = typedefof<EventHandler<_>>.MakeGenericType eventArgsTy
+//            let eventField = ProvidedField("_onChanged", eventType)
+//            let event = ProvidedEvent("Changed", eventType)
+//            let delegateType = typeof<Delegate>
+//            let combineMethod = delegateType.GetMethod("Combine", [|delegateType; delegateType|])
+//            let removeMethod = delegateType.GetMethod("Remove", [|delegateType; delegateType|])
+//
+//            let changeEvent m me v = 
+//                let current = Expr.Coerce (Expr.FieldGet(me, eventField), delegateType)
+//                let other = Expr.Coerce (v, delegateType)
+//                Expr.Coerce (Expr.Call (m, [current; other]), eventType)
+//
+//            let adder = changeEvent combineMethod
+//            let remover = changeEvent removeMethod
+//
+//            event.AdderCode <- fun [me; v] -> Expr.FieldSet(me, eventField, adder me v)
+//            event.RemoverCode <- fun [me; v] -> Expr.FieldSet(me, eventField, remover me v)
+//
+//            mapTy.AddMember eventArgsTy
+//            mapTy.AddMember eventField
 //            mapTy.AddMember event
+
+            let eventType = typeof<EventHandler>
+            let eventField = ProvidedField("_changed", eventType)
+            let event = ProvidedEvent("Changed", eventType)
+            let delegateType = typeof<Delegate>
+            let combineMethod = delegateType.GetMethod("Combine", [|delegateType; delegateType|])
+            let removeMethod = delegateType.GetMethod("Remove", [|delegateType; delegateType|])
+
+            let changeEvent m me v = 
+                let current = Expr.Coerce (Expr.FieldGet(me, eventField), delegateType)
+                let other = Expr.Coerce (v, delegateType)
+                Expr.Coerce (Expr.Call (m, [current; other]), eventType)
+
+            let adder = changeEvent combineMethod
+            let remover = changeEvent removeMethod
+
+            event.AdderCode <- fun [me; v] -> Expr.FieldSet(me, eventField, adder me v)
+            event.RemoverCode <- fun [me; v] -> Expr.FieldSet(me, eventField, remover me v)
+
+            mapTy.AddMember eventField
+            mapTy.AddMember event
+
+            //let h: EventHandler = EventHandler(fun _ (a: EventArgs) -> ())
 
             { MainType = Some (mapTy :> _)
               Types = [mapTy :> MemberInfo; field :> MemberInfo; prop :> MemberInfo]
@@ -121,11 +160,11 @@ module TypesFactory =
 type public YamlProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces()
     let mutable watcher: FileSystemWatcher option = None
-    static let log = 
-        let w = new StreamWriter @"l:\Yaml.log"
-        fun msg -> lock w |> fun _ -> 
-            w.WriteLine (sprintf "[%O, %d] %s" DateTime.Now Thread.CurrentThread.ManagedThreadId msg)
-            w.Flush()
+//    static let log = 
+//        let w = new StreamWriter @"l:\Yaml.log"
+//        fun msg -> lock w |> fun _ -> 
+//            w.WriteLine (sprintf "[%O, %d] %s" DateTime.Now Thread.CurrentThread.ManagedThreadId msg)
+//            w.Flush()
 
     let disposeWatcher() =
         watcher |> Option.iter (fun x -> (x :> IDisposable).Dispose())
@@ -177,11 +216,11 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
 
         let invalidate (args: FileSystemEventArgs) =
             let curr = getLastWrite()
-            log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
+           // log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
 
             if !lastWrite <> curr then
                 lastWrite := curr
-                log "invalidate"
+                //log "invalidate"
                 this.Invalidate()
 
         w.Changed.Add invalidate
@@ -240,7 +279,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
     do this.AddNamespace(nameSpace, [newT])
     interface IDisposable with 
         member x.Dispose() = 
-            log "disposing"
+            //log "disposing"
             disposeWatcher()
 
 [<TypeProviderAssembly>]
