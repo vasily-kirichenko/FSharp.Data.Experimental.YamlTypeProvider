@@ -137,7 +137,6 @@ DB:
   DefaultTimeout: 00:10:00
 ```
 Great! Values have been updated properly, the new user has been added into ```ErrorNotificationRecipients``` list.
-
 The Changed event
 -----------------
 Every type in the hierarchy contains ```Changed: EventHandler``` event. It's raised when an instance is updated (```Load```ed), not when the writable properties are assigned. Let's show the event in action:
@@ -185,7 +184,6 @@ Mail changed!
 Mail.Smtp changed!
 ```
 So, we can see that all the events have been raised from the root's one down to the most close to the changed value one. And note that there're no duplicates - even though two value was changed in Mail.Smpt map, its Changed event has been raised only once.
-
 Using F# scripts to produce different variants of the config
 ----------------------------------------------------------------
 In this example we'll change configs in statically typed manner, via F# scripts, which is very useful as you creating several variants of the configuration - one for developers, one to testers and several different variants (for each server "role") for production. Without statically typed scripts with intellisence this process quickly become very tedious and error prone. 
