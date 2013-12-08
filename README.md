@@ -136,7 +136,55 @@ DB:
   NumberOfDeadlockRepeats: 5
   DefaultTimeout: 00:10:00
 ```
-Great! Values have been updated properly, new user has been added into ```ErrorNotificationRecipients``` list.
+Great! Values have been updated properly, the new user has been added into ```ErrorNotificationRecipients``` list.
+
+The Changed event
+-----------------
+Every type in the hierarchy contains ```Changed: EventHandler``` event. It's raised when an instance is updated (```Load```ed), not when the writable properties are assigned. Let's show the event in action:
+```fsharp
+...reference assemblies and open namespaces as before...
+let s = Settings.Settings()
+let log name _ = printfn "%s changed!" name
+// add handlers for the root and all down the Mail hierarchy 
+s.Changed.Add (log "ROOT")
+s.Mail.Changed.Add (log "Mail")
+s.Mail.Smtp.Changed.Add (log "Mail.Smtp")
+s.Mail.Pop3.Changed.Add (log "Mail.Pop3")
+// as a marker, add a handler for DB
+s.DB.Changed.Add (log "DB")
+s.LoadText """
+Mail:
+  Smtp:
+    Host: smtp.sample.com
+    Port: 443
+    User: user11 // <-- first changed value
+    Password: pass1
+    Ssl: true    // <-- second changed value on the same level (in the same Map)
+  Pop3:
+    Host: pop3.sample.com
+    Port: 331
+    User: user2
+    Password: pass2
+    CheckPeriod: 00:01:00
+  ErrorNotificationRecipients:
+    - user1@sample.com
+    - user2@sample.com
+DB:
+  ConnectionString: Data Source=server1;Initial Catalog=Database1;Integrated Security=SSPI;
+  NumberOfDeadlockRepeats: 5
+  DefaultTimeout: 00:05:00
+Dashboard: http://sample.domain.com/dashboard.xml
+Collaborations: [ "http://sample.domain.com/dashboard.xml" ]
+SharedFile: \\server\dir\file.txt
+LocalFile: c:\dir\file.txt""" |> ignore
+```
+The output is as follows:
+```
+ROOT changed!
+Mail changed!
+Mail.Smtp changed!
+```
+So, we can see that all the events have been raised from the root's one down to the most close to the changed value one. And note that there're no duplicates - even though two value was changed in Mail.Smpt map, its Changed event has been raised only once.
 
 Using F# scripts to produce different variants of the config
 ----------------------------------------------------------------
