@@ -142,7 +142,7 @@ The Changed event
 -----------------
 Every type in the hierarchy contains ```Changed: EventHandler``` event. It's raised when an instance is updated (```Load```ed), not when the writable properties are assigned. Let's show the event in action:
 ```fsharp
-...reference assemblies and open namespaces as before...
+// ...reference assemblies and open namespaces as before...
 let s = Settings.Settings()
 let log name _ = printfn "%s changed!" name
 // add handlers for the root and all down the Mail hierarchy 
