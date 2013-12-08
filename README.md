@@ -157,9 +157,9 @@ Mail:
   Smtp:
     Host: smtp.sample.com
     Port: 443
-    User: user11 // <-- first changed value
-    Password: pass1
-    Ssl: true    // <-- second changed value on the same level (in the same Map)
+    User:       => first changed value <=
+    Password:   => second changed value on the same level (in the same Map) <=
+    Ssl: true   
   Pop3:
     Host: pop3.sample.com
     Port: 331
