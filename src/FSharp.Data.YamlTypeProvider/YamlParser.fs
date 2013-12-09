@@ -89,7 +89,7 @@ let update (target: 'a) (updater: Node) =
             let field = getField target ("_" + name)
         
             if field.FieldType <> node.UnderlyingType then 
-                failwithf "Cannot assign value of type %s to field of type %s." node.UnderlyingType.Name field.FieldType.Name
+                failwithf "Cannot assign value of type %s to field of %s: %s." node.UnderlyingType.Name name field.FieldType.Name
 
             let oldValue = field.GetValue(target)
             let newValue = getBoxedNodeValue node
@@ -148,5 +148,5 @@ let update (target: 'a) (updater: Node) =
     update target None updater
     |> Seq.filter ((<>) null)
     |> Seq.collect (fun x -> x.GetInvocationList())
-    |> Seq.distinctBy (fun x -> x.Target)
+    |> Seq.distinct
     |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore)

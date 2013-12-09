@@ -25,12 +25,17 @@ type Root () =
     /// Load Yaml from a TextReader and update itself with it.
     member x.Load (reader: TextReader) = reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file and update itself with it.
-    member x.Load (filePath: string) = File.ReadAllText filePath |> YamlParser.parse |> YamlParser.update x
+    member x.Load (filePath: string) =
+        use file = new FileStream (filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+        use reader = new StreamReader (file)
+        reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file, update itself with it then start watching it for changes.
     /// If it detects any change, it reloads the file.
     member x.LoadAndWatch (filePath: string) = 
         x.Load filePath
-        File.watch filePath <| fun _ -> x.Load filePath
+        File.watch filePath <| fun _ -> 
+            try x.Load filePath
+            with e -> printfn "Cannot load file %s: %O" filePath e.Message
     /// Saves content into a stream.
     member x.Save (stream: Stream) =
         use writer = new StreamWriter(stream)

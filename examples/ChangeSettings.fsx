@@ -53,6 +53,5 @@ s.Dashboard
 s.Dashboard <- Uri("ftp://new.com/1.html")
 s.Mail.ErrorNotificationRecipients <- [|"s1"|]
 s.Collaborations <- [| Uri ("http://1.com") |]
-s.RelativePath <- "..\AvpBasesUpdater\AvpBases\KdcProduction"
 
 s.Save (__SOURCE_DIRECTORY__ + @"\ChangedSettings.yaml")

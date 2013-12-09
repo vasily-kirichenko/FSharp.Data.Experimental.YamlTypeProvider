@@ -3,11 +3,11 @@ Mail:
     Host: smtp2.sample.com
     Port: 444
     User: user11
-    Password: pass11
-    Ssl: false
+    Password: pass113
+    Ssl: true
   Pop3:
     Host: pop32.sample.com
-    Port: 0
+    Port: 22
     User: user2
     Password: pass2
     CheckPeriod: 00:02:00
@@ -18,4 +18,4 @@ Mail:
 DB:
   ConnectionString: Data Source=server2;Initial Catalog=Database1;Integrated Security=SSPI;
   NumberOfDeadlockRepeats: 5
-  DefaultTimeout: 00:10:00
+  DefaultTimeout: 00:10:01
