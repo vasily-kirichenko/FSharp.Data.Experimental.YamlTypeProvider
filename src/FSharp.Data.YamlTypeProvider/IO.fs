@@ -15,7 +15,7 @@ module File =
         let changed (args: FileSystemEventArgs) =
             let curr = getLastWrite()
             // log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
-            if curr > (!state).LastFileWriteTime && DateTime.Now - (!state).Updated > TimeSpan.FromMilliseconds 500. then
+            if curr <> (!state).LastFileWriteTime && DateTime.Now - (!state).Updated > TimeSpan.FromMilliseconds 500. then
                 state := { LastFileWriteTime = curr; Updated = DateTime.Now }
                 //log "call onChanged"
                 onChanged()
