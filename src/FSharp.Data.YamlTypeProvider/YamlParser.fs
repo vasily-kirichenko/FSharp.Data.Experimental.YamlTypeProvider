@@ -143,7 +143,7 @@ let update (target: 'a) (updater: Node) =
 
         match updaters |> List.collect (fun (name, node) -> update target (Some name) node) with
         | [] -> []
-        | events -> getChangedDelegate target :: events
+        | events -> getChangedDelegate target :: events // if any child is raising the event, we also do (pull it up the hierarchy)
 
     update target None updater
     |> Seq.filter ((<>) null)
@@ -151,5 +151,3 @@ let update (target: 'a) (updater: Node) =
     |> Seq.distinctBy (fun x -> x.Target)
     |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore)
     target
-
-

@@ -55,6 +55,7 @@
     <Compile Include="ProvidedTypes-head.fsi" />
     <Compile Include="ProvidedTypes-head.fs" />
     <Compile Include="YamlParser.fs" />
+    <Compile Include="IO.fs" />
     <Compile Include="Root.fs" />
     <Compile Include="TypeProvider.fs" />
     <Compile Include="AssemblyInfo.fs" />

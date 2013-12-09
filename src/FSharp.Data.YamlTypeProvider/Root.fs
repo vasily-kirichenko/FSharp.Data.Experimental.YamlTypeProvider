@@ -21,21 +21,22 @@ type Root () =
         Serializer(settings)
     
     /// Load Yaml text and update itself with it.
-    member x.LoadText (yamlText: string) =
-        YamlParser.parse yamlText |> YamlParser.update x
+    member x.LoadText (yamlText: string) = YamlParser.parse yamlText |> YamlParser.update x
     /// Load Yaml from a TextReader and update itself with it.
-    member x.Load (reader: TextReader) =
-        reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
+    member x.Load (reader: TextReader) = reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file and update itself with it.
-    member x.Load (filePath: string) =
-        File.ReadAllText filePath |> YamlParser.parse |> YamlParser.update x
+    member x.Load (filePath: string) = File.ReadAllText filePath |> YamlParser.parse |> YamlParser.update x
+    /// Load Yaml from a file, update itself with it then start watching it for changes.
+    /// If it detects any change, it reloads the file.
+    member x.LoadAndWatch (filePath: string) = 
+        x.Load filePath
+
     /// Saves content into a stream.
     member x.Save (stream: Stream) =
         use writer = new StreamWriter(stream)
         x.Save writer
     /// Saves content into a TestWriter.
-    member x.Save (writer: TextWriter) =
-        serializer.Serialize(writer, x)
+    member x.Save (writer: TextWriter) = serializer.Serialize(writer, x)
     /// Saves content into a file.
     member x.Save (filePath: string) =
         use file = new FileStream(filePath, FileMode.Create)

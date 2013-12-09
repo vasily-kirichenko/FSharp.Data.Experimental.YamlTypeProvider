@@ -162,7 +162,7 @@ module TypesFactory =
 [<TypeProvider>]
 type public YamlProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces()
-    let mutable watcher: FileSystemWatcher option = None
+    let mutable watcher: IDisposable option = None
 //    static let log = 
 //        let w = new StreamWriter @"l:\Yaml.log"
 //        fun msg -> lock w |> fun _ -> 
@@ -170,7 +170,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
 //            w.Flush()
 
     let disposeWatcher() =
-        watcher |> Option.iter (fun x -> (x :> IDisposable).Dispose())
+        watcher |> Option.iter (fun x -> x.Dispose())
         watcher <- None
 
     let thisAssembly = Assembly.GetExecutingAssembly()
@@ -184,53 +184,8 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             match Path.IsPathRooted fileName with
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
-
-        let getLastWrite() = File.GetLastWriteTime fileName
-        let lastWrite = ref (getLastWrite())
-        let path = Path.GetDirectoryName fileName
-        let name = Path.GetFileName fileName
-        let w = new FileSystemWatcher(Filter = name, Path = path)
-
-// change
-//[07.12.2013 12:46:14, 36] Deleted (Deleted). LWT = 01.01.1601 4:00:00 (504911376000000000) 
-//[07.12.2013 12:46:14, 36] Renamed (Renamed). LWT = 07.12.2013 12:46:14 (635220171742164426) 
-//[07.12.2013 12:46:14, 46] Changed (Changed). LWT = 07.12.2013 12:46:14 (635220171742164426)
-
-// another change
-//[07.12.2013 12:44:03, 13] Deleted (Deleted). LWT = 07.12.2013 12:44:03 (635220170437799821) 
-//[07.12.2013 12:44:03, 13] Renamed (Renamed). LWT = 07.12.2013 12:44:03 (635220170437799821) 
-//[07.12.2013 12:44:03, 13] Changed (Changed). LWT = 07.12.2013 12:44:03 (635220170437799821) 
-
-// delete
-//[07.12.2013 12:44:53, 37] Deleted (Deleted). LWT = 01.01.1601 4:00:00 (504911376000000000) 
-
-// appearing deleted file
-//[07.12.2013 12:51:49, 35] Renamed (Renamed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-//[07.12.2013 12:51:49, 35] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-//[07.12.2013 12:51:49, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-
-// rename our file -> another
-//[07.12.2013 12:49:57, 20] Renamed (Renamed). LWT = 01.01.1601 4:00:00 (504911376000000000) 
-
-// rename another file -> our
-//[07.12.2013 12:50:55, 20] Renamed (Renamed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-//[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-//[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-
-        let invalidate (args: FileSystemEventArgs) =
-            let curr = getLastWrite()
-           // log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
-
-            if !lastWrite <> curr then
-                lastWrite := curr
-                //log "invalidate"
-                this.Invalidate()
-
-        w.Changed.Add invalidate
-        w.Renamed.Add invalidate
-        w.Deleted.Add invalidate
-        w.EnableRaisingEvents <- true
-        watcher <- Some w
+        
+        watcher <- Some (File.watch fileName this.Invalidate)
 
     let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
     let staticParams = 
