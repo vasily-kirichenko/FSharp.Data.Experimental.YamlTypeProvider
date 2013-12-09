@@ -30,7 +30,7 @@ type Root () =
     /// If it detects any change, it reloads the file.
     member x.LoadAndWatch (filePath: string) = 
         x.Load filePath
-
+        File.watch filePath <| fun _ -> x.Load filePath
     /// Saves content into a stream.
     member x.Save (stream: Stream) =
         use writer = new StreamWriter(stream)
