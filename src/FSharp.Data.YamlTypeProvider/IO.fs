@@ -8,7 +8,7 @@ module File =
         { LastFileWriteTime: DateTime
           Updated: DateTime }
 
-    let watch filePath onChanged =
+    let watch skipDeletes filePath onChanged =
         let getLastWrite() = File.GetLastWriteTime filePath
         let state = ref { LastFileWriteTime = getLastWrite(); Updated = DateTime.Now }
         
@@ -23,7 +23,7 @@ module File =
         let w = new FileSystemWatcher(Path.GetDirectoryName filePath, Path.GetFileName filePath)
         w.Changed.Add changed
         w.Renamed.Add changed
-        w.Deleted.Add changed
+        if not skipDeletes then w.Deleted.Add changed
         w.EnableRaisingEvents <- true
         w :> IDisposable
 

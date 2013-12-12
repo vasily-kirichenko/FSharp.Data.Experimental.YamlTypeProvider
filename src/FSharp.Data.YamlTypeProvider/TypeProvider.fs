@@ -185,7 +185,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)
         
-        watcher <- Some (File.watch fileName this.Invalidate)
+        watcher <- Some (File.watch false fileName this.Invalidate)
 
     let newT = ProvidedTypeDefinition(thisAssembly, nameSpace, "Yaml", Some baseTy, IsErased=false, SuppressRelocation=false)
     let staticParams = 

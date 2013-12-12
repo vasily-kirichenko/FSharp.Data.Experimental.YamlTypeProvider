@@ -33,7 +33,7 @@ type Root () =
     /// If it detects any change, it reloads the file.
     member x.LoadAndWatch (filePath: string) = 
         x.Load filePath
-        File.watch filePath <| fun _ -> 
+        File.watch true filePath <| fun _ -> 
             try x.Load filePath
             with e -> printfn "Cannot load file %s: %O" filePath e.Message
     /// Saves content into a stream.
