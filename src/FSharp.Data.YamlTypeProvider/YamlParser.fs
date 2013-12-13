@@ -97,11 +97,6 @@ let update (target: 'a) (updater: Node) =
             let newValue = getBoxedNodeValue node
         
             if oldValue <> newValue then
-                printfn "!!! %s: %A -> %A" name oldValue newValue
-            else
-                printfn "%s: %A = %A" name oldValue newValue
-
-            if oldValue <> newValue then
                 field.SetValue(target, newValue)
                 [getChangedDelegate target]
             else []
@@ -157,5 +152,5 @@ let update (target: 'a) (updater: Node) =
     |> Seq.filter ((<>) null)
     |> Seq.collect (fun x -> x.GetInvocationList())
     |> Seq.distinct
-    |> fun x -> printfn "Updated. %d events to raise: %A" (Seq.length x) x; Seq.toList x
+    //|> fun x -> printfn "Updated. %d events to raise: %A" (Seq.length x) x; Seq.toList x
     |> Seq.iter (fun h -> h.Method.Invoke(h.Target, [|box target; EventArgs.Empty|]) |> ignore)
