@@ -18,7 +18,7 @@ type Root () =
                                                 match ctx.Instance with
                                                 | :? Uri as uri -> uri.OriginalString
                                                 | _ -> "" })
-        Serializer(settings)
+        Serializer(settings) 
     
     /// Load Yaml text and update itself with it.
     member x.LoadText (yamlText: string) = YamlParser.parse yamlText |> YamlParser.update x
@@ -26,16 +26,18 @@ type Root () =
     member x.Load (reader: TextReader) = reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file and update itself with it.
     member x.Load (filePath: string) =
-        use file = new FileStream (filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-        use reader = new StreamReader (file)
-        reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
+        using (new FileStream (filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) <| fun file ->
+        using (new StreamReader (file)) <| fun reader ->
+            reader.ReadToEnd() 
+        |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file, update itself with it then start watching it for changes.
     /// If it detects any change, it reloads the file.
     member x.LoadAndWatch (filePath: string) = 
         x.Load filePath
-        File.watch true filePath <| fun _ -> 
+        File.watch true filePath <| fun _ ->
+            printfn "Loading %s..." filePath
             try x.Load filePath
-            with e -> printfn "Cannot load file %s: %O" filePath e.Message
+            with e -> printfn "Cannot load file %s: %O" filePath e.Message; reraise()
     /// Saves content into a stream.
     member x.Save (stream: Stream) =
         use writer = new StreamWriter(stream)

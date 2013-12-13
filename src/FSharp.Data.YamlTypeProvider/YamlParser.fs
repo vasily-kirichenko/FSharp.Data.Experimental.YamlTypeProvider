@@ -52,7 +52,9 @@ let parse : (string -> Node) =
                 match p.Key with
                 | :? string as key -> Some (key, loop p.Value)
                 | _ -> None) |> Seq.toList)
-        | scalar -> Scalar (Scalar.Parse (scalar.ToString()))
+        | scalar ->
+            let scalar = if scalar = null then "" else scalar.ToString()
+            Scalar (Scalar.Parse scalar)
 
     let settings = SerializerSettings(EmitDefaultValues=true, EmitTags=false, SortKeyForMapping=false)
     let serializer = Serializer(settings)
@@ -103,13 +105,14 @@ let update (target: 'a) (updater: Node) =
     and updateList (target: obj) name (updaters: Node list) =
         let updaters = updaters |> List.choose (function Scalar x -> Some x | _ -> None)
 
-        let elementType = 
+        let field = getField target ("_" + name)
+        
+        let fieldType = 
             match updaters |> Seq.groupBy (fun n -> n.UnderlyingType) |> Seq.map fst |> Seq.toList with
-            | [ty] -> ty
+            | [] -> field.FieldType
+            | [ty] -> typedefof<ResizeArray<_>>.MakeGenericType ty
             | types -> failwithf "List cannot contain elements of heterohenius types (attempt to mix types: %A)." types
 
-        let fieldType = typedefof<ResizeArray<_>>.MakeGenericType elementType
-        let field = getField target ("_" + name)
         if field.FieldType <> fieldType then failwithf "Cannot assign %O to %O." fieldType.Name field.FieldType.Name
 
         let sort (xs: obj seq) = 
@@ -125,7 +128,7 @@ let update (target: 'a) (updater: Node) =
 
         if oldValues <> newValues then
             let list = Activator.CreateInstance fieldType
-            let addMethod = fieldType.GetMethod("Add", [|elementType|])
+            let addMethod = fieldType.GetMethod("Add", [|fieldType.GetGenericArguments().[0]|])
             updaters |> List.iter (fun x -> addMethod.Invoke(list, [|getBoxedNodeValue x|]) |> ignore)
             field.SetValue(target, list)
             [getChangedDelegate target]

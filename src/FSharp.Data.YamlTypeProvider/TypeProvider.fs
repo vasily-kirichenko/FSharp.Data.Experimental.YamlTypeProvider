@@ -180,7 +180,7 @@ type public YamlProvider (cfg: TypeProviderConfig) as this =
     let watchForChanges (fileName: string) =
         disposeWatcher()
         
-        let fileName = 
+        let fileName =
             match Path.IsPathRooted fileName with
             | true -> fileName
             | _ -> Path.Combine (cfg.ResolutionFolder, fileName)

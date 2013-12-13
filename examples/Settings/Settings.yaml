@@ -22,4 +22,5 @@ Dashboard: http://sample.domain.com/dashboard.xml
 Collaborations: [ "http://sample.domain.com/dashboard.xml" ]
 SharedFile: \\server\dir\file.txt
 LocalFile: c:\dir\file.txt
+ListOfStrings: [first, second]
         

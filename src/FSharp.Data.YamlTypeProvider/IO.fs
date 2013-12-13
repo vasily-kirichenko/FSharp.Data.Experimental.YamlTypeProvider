@@ -8,7 +8,7 @@ module File =
         { LastFileWriteTime: DateTime
           Updated: DateTime }
 
-    let watch skipDeletes filePath onChanged =
+    let watch changesOnly filePath onChanged =
         let getLastWrite() = File.GetLastWriteTime filePath
         let state = ref { LastFileWriteTime = getLastWrite(); Updated = DateTime.Now }
         
@@ -16,14 +16,19 @@ module File =
             let curr = getLastWrite()
             // log (sprintf "%A. Last = %A, Curr = %A" args.ChangeType !lastWrite curr)
             if curr <> (!state).LastFileWriteTime && DateTime.Now - (!state).Updated > TimeSpan.FromMilliseconds 500. then
-                state := { LastFileWriteTime = curr; Updated = DateTime.Now }
+//                try 
+                    onChanged()
+                    state := { LastFileWriteTime = curr; Updated = DateTime.Now }
+//                with e -> ()
                 //log "call onChanged"
-                onChanged()
+                
 
         let w = new FileSystemWatcher(Path.GetDirectoryName filePath, Path.GetFileName filePath)
+        w.NotifyFilter <- NotifyFilters.CreationTime ||| NotifyFilters.LastWrite ||| NotifyFilters.Size
         w.Changed.Add changed
-        w.Renamed.Add changed
-        if not skipDeletes then w.Deleted.Add changed
+        if not changesOnly then 
+            w.Deleted.Add changed
+            w.Renamed.Add changed
         w.EnableRaisingEvents <- true
         w :> IDisposable
 
