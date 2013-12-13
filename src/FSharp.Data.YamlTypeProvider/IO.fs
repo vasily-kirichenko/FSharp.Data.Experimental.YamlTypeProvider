@@ -4,6 +4,19 @@ open System
 open System.IO
 
 module File =
+    let tryReadNonEmptyTextFile filePath =
+        let rec loop attempt = async {
+            use file = new FileStream (filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            use reader = new StreamReader (file)
+            match attempt, reader.ReadToEnd() with
+            | 0, x -> return x
+            | _, "" -> 
+                printfn "Attempt %d of %d: %s is empty. Sleep for 1 sec, then retry..." attempt 5 filePath
+                do! Async.Sleep 1000
+                return! loop (attempt - 1)
+            | _, content -> return content }
+        loop 5 |> Async.RunSynchronously
+
     type private State = 
         { LastFileWriteTime: DateTime
           Updated: DateTime }
@@ -57,6 +70,5 @@ module File =
 //[07.12.2013 12:50:55, 20] Renamed (Renamed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
 //[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
 //[07.12.2013 12:50:55, 20] Changed (Changed). LWT = 07.12.2013 12:49:45 (635220173857035390) 
-
 
 

@@ -25,11 +25,7 @@ type Root () =
     /// Load Yaml from a TextReader and update itself with it.
     member x.Load (reader: TextReader) = reader.ReadToEnd() |> YamlParser.parse |> YamlParser.update x
     /// Load Yaml from a file and update itself with it.
-    member x.Load (filePath: string) =
-        using (new FileStream (filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) <| fun file ->
-        using (new StreamReader (file)) <| fun reader ->
-            reader.ReadToEnd() 
-        |> YamlParser.parse |> YamlParser.update x
+    member x.Load (filePath: string) = filePath |> File.tryReadNonEmptyTextFile|> x.LoadText
     /// Load Yaml from a file, update itself with it then start watching it for changes.
     /// If it detects any change, it reloads the file.
     member x.LoadAndWatch (filePath: string) = 
