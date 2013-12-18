@@ -42,7 +42,8 @@ type Root () =
     member x.Save (writer: TextWriter) = serializer.Serialize(writer, x)
     /// Saves content into a file.
     member x.Save (filePath: string) =
-        use file = new FileStream(filePath, FileMode.Create)
+        // forbid any access to the file for atomicity
+        use file = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None) 
         x.Save file
     /// Returns content as Yaml text.
     override x.ToString() = 
