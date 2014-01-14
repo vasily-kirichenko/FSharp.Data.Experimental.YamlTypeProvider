@@ -1,4 +1,4 @@
-﻿module FSharp.Data.Experimental.YamlParser
+﻿module FSharp.Configuration.YamlParser
 
 open System
 open System.IO

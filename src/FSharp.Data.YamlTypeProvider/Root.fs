@@ -1,4 +1,4 @@
-﻿namespace FSharp.Data.Experimental
+﻿namespace FSharp.Configuration
 
 open System
 open System.IO

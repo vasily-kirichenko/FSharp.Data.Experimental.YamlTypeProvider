@@ -5,7 +5,7 @@ open System
 open System.IO
 open System.Reflection
 open System.Collections.Generic
-open FSharp.Data.Experimental
+open FSharp.Configuration
 
 type T() =
     let e = Event<_>()

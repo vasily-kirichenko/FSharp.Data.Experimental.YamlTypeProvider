@@ -1,9 +1,9 @@
 #r @".\bin\Debug\FSharp.Data.YamlTypeProvider.dll"
 
 open System
-open FSharp.Data.Experimental
+open FSharp.Configuration
 open System.IO
-open FSharp.Data.Experimental.YamlParser
+open FSharp.Configuration.YamlParser
 open System.Reflection
 
 [<Literal>]
