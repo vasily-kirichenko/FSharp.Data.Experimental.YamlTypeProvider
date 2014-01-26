@@ -1,6 +1,9 @@
 FSharp.Data.Experimental.YamlTypeProvider
 =========================================
 
+It has become part of FSharp.Configuration project.
+---------------------------------------------------
+
 It's a Yaml F# Type Provider. 
 
 It's generated, hence the types can be used from any .NET language, not only from F# code.
